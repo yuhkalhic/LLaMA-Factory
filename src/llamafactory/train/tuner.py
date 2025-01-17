@@ -30,9 +30,9 @@ from .dpo import run_dpo
 from .kto import run_kto
 from .ppo import run_ppo
 from .pt import run_pt
+from .raft import run_raft
 from .rm import run_rm
 from .sft import run_sft
-from .raft import run_raft
 from .trainer_utils import get_ray_trainer, get_swanlab_callback
 
 

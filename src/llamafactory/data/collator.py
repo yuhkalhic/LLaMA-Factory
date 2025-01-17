@@ -181,6 +181,7 @@ class SFTDataCollatorWith4DAttentionMask(MultiModalDataCollatorForSeq2Seq):
 
         return features
 
+
 @dataclass
 class RAFTDataCollatorWith4DAttentionMask(MultiModalDataCollatorForSeq2Seq):
     r"""

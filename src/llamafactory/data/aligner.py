@@ -16,10 +16,11 @@ import os
 from functools import partial
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Sequence, Union
 
+from datasets.features import Features, Value
+from datasets.features import Sequence as SequenceFeature
+
 from ..extras import logging
 from .data_utils import Role
-
-from datasets.features import Features, Value, Sequence as SequenceFeature
 
 
 if TYPE_CHECKING:
@@ -234,7 +235,6 @@ def convert_raft(
     dataset_attr: "DatasetAttr",
     data_args: "DataArguments",
 ) -> Dict[str, Any]:
-
     prompt = []
     if dataset_attr.history and example.get(dataset_attr.history):
         for old_prompt, old_response in example[dataset_attr.history]:
@@ -250,7 +250,11 @@ def convert_raft(
 
     prompt.append({"role": Role.USER.value, "content": "\n".join(query)})
 
-    response = [{"role": Role.ASSISTANT.value, "content": example[dataset_attr.response]}] if example.get(dataset_attr.response) else []
+    response = (
+        [{"role": Role.ASSISTANT.value, "content": example[dataset_attr.response]}]
+        if example.get(dataset_attr.response)
+        else []
+    )
 
     positive_contexts = []
     if dataset_attr.positive_context and example.get(dataset_attr.positive_context):
@@ -282,6 +286,7 @@ def convert_raft(
         "_negative_context": negative_contexts,  # List[str]
     }
     return output
+
 
 def align_dataset(
     dataset: Union["Dataset", "IterableDataset"],
@@ -316,16 +321,18 @@ def align_dataset(
             desc="Converting format of dataset",
         )
 
-    features = Features({
-        "_prompt": [{"role": Value("string"), "content": Value("string")}],
-        "_response": [{"role": Value("string"), "content": Value("string")}],
-        "_system": Value("string"),
-        "_tools": Value("string"),
-        "_images": SequenceFeature(Value("string"), length=-1) if dataset_attr.images else Value("null"),
-        "_videos": SequenceFeature(Value("string"), length=-1) if dataset_attr.videos else Value("null"),
-        "_positive_context": SequenceFeature(Value("string"), length=-1),
-        "_negative_context": SequenceFeature(Value("string"), length=-1)
-    })
+    features = Features(
+        {
+            "_prompt": [{"role": Value("string"), "content": Value("string")}],
+            "_response": [{"role": Value("string"), "content": Value("string")}],
+            "_system": Value("string"),
+            "_tools": Value("string"),
+            "_images": SequenceFeature(Value("string"), length=-1) if dataset_attr.images else Value("null"),
+            "_videos": SequenceFeature(Value("string"), length=-1) if dataset_attr.videos else Value("null"),
+            "_positive_context": SequenceFeature(Value("string"), length=-1),
+            "_negative_context": SequenceFeature(Value("string"), length=-1),
+        }
+    )
 
     return dataset.map(
         convert_func,

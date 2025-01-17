@@ -1,17 +1,21 @@
+import random
 from collections import defaultdict
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Sequence, Tuple
+
 from ...extras import logging
 from ...extras.constants import IGNORE_INDEX
 from .processor_utils import greedy_knapsack, infer_seqlen
-import random
+
 
 if TYPE_CHECKING:
     from transformers import PreTrainedTokenizer, ProcessorMixin
+
     from ...hparams import DataArguments
     from ..mm_plugin import ImageInput, VideoInput
     from ..template import Template
 
 logger = logging.get_logger(__name__)
+
 
 def _prepare_raft_context(
     positive_context: List[str],
@@ -21,7 +25,7 @@ def _prepare_raft_context(
 ) -> List[str]:
     contexts = []
     use_positive = random.random() < p
-    
+
     if use_positive and positive_context:
         contexts.append(random.choice(positive_context))
         if negative_context:
@@ -31,9 +35,10 @@ def _prepare_raft_context(
         if negative_context:
             n_to_sample = min(num_distract + 1, len(negative_context))
             contexts.extend(random.sample(negative_context, n_to_sample))
-    
+
     random.shuffle(contexts)
     return contexts
+
 
 def _encode_raft_example(
     prompt: Sequence[Dict[str, str]],
@@ -59,15 +64,15 @@ def _encode_raft_example(
     """
     contexts = _prepare_raft_context(positive_context, negative_context, raft_p, raft_num_distract)
     context_str = "\n".join([f"{ctx}\n" for ctx in contexts])
-    
+
     if prompt and isinstance(prompt[0], dict) and "content" in prompt[0]:
         prompt[0]["content"] = f"{context_str}\n{prompt[0]['content']}"
-    
+
     messages = template.mm_plugin.process_messages(prompt + response, images, videos, processor)
     input_ids, labels = template.mm_plugin.process_token_ids([], [], images, videos, tokenizer, processor)
     encoded_pairs = template.encode_multiturn(tokenizer, messages, system, tools)
     total_length = len(input_ids) + (1 if template.efficient_eos else 0)
-    
+
     if mask_history:
         encoded_pairs = encoded_pairs[::-1]
 
@@ -104,6 +109,7 @@ def _encode_raft_example(
         labels += [tokenizer.eos_token_id]
     print(tokenizer.decode(input_ids))
     return input_ids, labels
+
 
 def preprocess_raft_dataset(
     examples: Dict[str, List[Any]],
@@ -143,7 +149,7 @@ def preprocess_raft_dataset(
             train_on_prompt=data_args.train_on_prompt,
             mask_history=data_args.mask_history,
             raft_p=data_args.raft_p,
-            raft_num_distract=data_args.raft_num_distract
+            raft_num_distract=data_args.raft_num_distract,
         )
         model_inputs["input_ids"].append(input_ids)
         model_inputs["attention_mask"].append([1] * len(input_ids))
@@ -152,6 +158,7 @@ def preprocess_raft_dataset(
         model_inputs["videos"].append(examples["_videos"][i])
 
     return model_inputs
+
 
 def preprocess_packed_raft_dataset(
     examples: Dict[str, List[Any]],
@@ -167,7 +174,7 @@ def preprocess_packed_raft_dataset(
     batch_input_ids, batch_labels, batch_images, batch_videos = [], [], [], []
     lengths = []
     length2indexes = defaultdict(list)
-    
+
     for i in range(len(examples["_prompt"])):
         if len(examples["_prompt"][i]) % 2 != 1 or len(examples["_response"][i]) != 1:
             logger.warning_rank0(
@@ -187,11 +194,11 @@ def preprocess_packed_raft_dataset(
             template=template,
             tokenizer=tokenizer,
             processor=processor,
-            cutoff_len=data_args.cutoff_len - 1, 
+            cutoff_len=data_args.cutoff_len - 1,
             train_on_prompt=data_args.train_on_prompt,
             mask_history=data_args.mask_history,
             raft_p=data_args.raft_p,
-            raft_num_distract=data_args.raft_num_distract
+            raft_num_distract=data_args.raft_num_distract,
         )
 
         length = len(input_ids)
@@ -208,18 +215,18 @@ def preprocess_packed_raft_dataset(
 
     model_inputs = defaultdict(list)
     knapsacks = greedy_knapsack(lengths, data_args.cutoff_len - 1)
-    
+
     for knapsack in knapsacks:
         packed_input_ids, packed_attention_masks, packed_labels = [], [], []
         packed_images, packed_videos = [], []
-        
+
         for i, length in enumerate(knapsack):
             index = length2indexes[length].pop()
             packed_input_ids += batch_input_ids[index]
             packed_labels += batch_labels[index]
             packed_images += batch_images[index]
             packed_videos += batch_videos[index]
-            
+
             if data_args.neat_packing:
                 packed_attention_masks += [i + 1] * len(batch_input_ids[index])
             else:
@@ -241,6 +248,7 @@ def preprocess_packed_raft_dataset(
         model_inputs["videos"].append(packed_videos or None)
 
     return model_inputs
+
 
 def print_raft_dataset_example(example: Dict[str, List[int]], tokenizer: "PreTrainedTokenizer") -> None:
     """Print a RAFT dataset example."""

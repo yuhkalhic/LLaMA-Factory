@@ -172,12 +172,12 @@ def _get_merged_dataset(
         elif stage == "raft":
             if dataset_attr.formatting != "raft":
                 raise ValueError(f"Dataset {dataset_attr.dataset_name} is not in RAFT format (formatting != 'raft')")
-            
+
             if not all(hasattr(dataset_attr, col) for col in ["positive_context", "negative_context"]):
                 raise ValueError(
                     f"Dataset {dataset_attr.dataset_name} missing required RAFT columns: positive_context and negative_context"
                 )
-            
+
             logger.info_rank0(
                 f"Using RAFT format for dataset {dataset_attr.dataset_name} "
                 f"with p={data_args.raft_p}, num_distractors={data_args.raft_num_distract}"

@@ -18,12 +18,12 @@ from typing import TYPE_CHECKING, Callable, Literal, Optional, Tuple
 from .processors.feedback import preprocess_feedback_dataset
 from .processors.pairwise import preprocess_pairwise_dataset, print_pairwise_dataset_example
 from .processors.pretrain import preprocess_pretrain_dataset, print_pretrain_dataset_example
+from .processors.raft import preprocess_packed_raft_dataset, preprocess_raft_dataset, print_raft_dataset_example
 from .processors.supervised import (
     preprocess_packed_supervised_dataset,
     preprocess_supervised_dataset,
     print_supervised_dataset_example,
 )
-from .processors.raft import preprocess_raft_dataset, preprocess_packed_raft_dataset, print_raft_dataset_example
 from .processors.unsupervised import preprocess_unsupervised_dataset, print_unsupervised_dataset_example
 
 
