@@ -109,6 +109,12 @@ USE_RAY=1 llamafactory-cli train examples/train_full/llama3_lora_sft_ray.yaml
 llamafactory-cli train examples/train_qlora/llama3_lora_sft_otfq.yaml
 ```
 
+#### 在 NPU 上基于 4 比特 Bitsandbytes 量化进行指令监督微调
+
+```bash
+llamafactory-cli train examples/train_qlora/llama3_lora_sft_bnb_npu.yaml
+```
+
 #### 基于 4/8 比特 GPTQ 量化进行指令监督微调
 
 ```bash
@@ -196,6 +202,12 @@ llamafactory-cli api examples/inference/llama3_lora_sft.yaml
 
 ```bash
 llamafactory-cli train examples/extras/galore/llama3_full_sft.yaml
+```
+
+#### 使用 APOLLO 进行全参数训练
+
+```bash
+llamafactory-cli train examples/extras/apollo/llama3_full_sft.yaml
 ```
 
 #### 使用 BAdam 进行全参数训练

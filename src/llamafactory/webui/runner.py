@@ -19,6 +19,7 @@ from subprocess import Popen, TimeoutExpired
 from typing import TYPE_CHECKING, Any, Dict, Generator, Optional
 
 from transformers.trainer import TRAINING_ARGS_NAME
+from transformers.utils import is_torch_npu_available
 
 from ..extras.constants import LLAMABOARD_CONFIG, PEFT_METHODS, TRAINING_STAGES
 from ..extras.misc import is_gpu_or_npu_available, torch_gc, use_ray
@@ -146,6 +147,7 @@ class Runner:
             shift_attn=get("train.shift_attn"),
             report_to="all" if get("train.report_to") else "none",
             use_galore=get("train.use_galore"),
+            use_apollo=get("train.use_apollo"),
             use_badam=get("train.use_badam"),
             use_swanlab=get("train.use_swanlab"),
             output_dir=get_save_dir(model_name, finetuning_type, get("train.output_dir")),
@@ -172,6 +174,7 @@ class Runner:
         if get("top.quantization_bit") in QUANTIZATION_BITS:
             args["quantization_bit"] = int(get("top.quantization_bit"))
             args["quantization_method"] = get("top.quantization_method")
+            args["double_quantization"] = not is_torch_npu_available()
 
         # freeze config
         if args["finetuning_type"] == "freeze":
@@ -221,6 +224,13 @@ class Runner:
             args["galore_update_interval"] = get("train.galore_update_interval")
             args["galore_scale"] = get("train.galore_scale")
             args["galore_target"] = get("train.galore_target")
+
+        # apollo config
+        if args["use_apollo"]:
+            args["apollo_rank"] = get("train.apollo_rank")
+            args["apollo_update_interval"] = get("train.apollo_update_interval")
+            args["apollo_scale"] = get("train.apollo_scale")
+            args["apollo_target"] = get("train.apollo_target")
 
         # badam config
         if args["use_badam"]:

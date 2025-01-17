@@ -817,6 +817,15 @@ register_model_group(
     template="intern2",
 )
 
+register_model_group(
+    models={
+        "InternLM3-8B-Chat": {
+            DownloadSource.DEFAULT: "internlm/internlm3-8b-instruct",
+            DownloadSource.MODELSCOPE: "Shanghai_AI_Laboratory/internlm3-8b-instruct",
+        },
+    },
+    template="intern3",
+)
 
 register_model_group(
     models={
@@ -1160,6 +1169,28 @@ register_model_group(
         },
     },
     template="cpm3",
+)
+
+
+register_model_group(
+    models={
+        "MiniCPM-o-2_6-Chat": {
+            DownloadSource.DEFAULT: "openbmb/MiniCPM-o-2_6",
+            DownloadSource.MODELSCOPE: "OpenBMB/MiniCPM-o-2_6",
+        },
+    },
+    template="minicpm_v",
+)
+
+
+register_model_group(
+    models={
+        "MiniCPM-V-2_6-Chat": {
+            DownloadSource.DEFAULT: "openbmb/MiniCPM-V-2_6",
+            DownloadSource.MODELSCOPE: "OpenBMB/MiniCPM-V-2_6",
+        },
+    },
+    template="minicpm_v",
 )
 
 
